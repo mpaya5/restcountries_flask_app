@@ -13,3 +13,9 @@ class LanguageDelete(BaseModel):
 class LanguageCreateAndUpdate(BaseModel):
     language_id: int = Field(..., description="The language id")
     name: str = Field(..., description="The language name")
+
+
+class PercentageCountry(BaseModel):
+    name: str = Field(..., description="Name of the country"),
+    population: int = Field(..., description="Population number"),
+    percentage: str = Field(..., description="Percentage number")

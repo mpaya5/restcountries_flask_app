@@ -1,4 +1,4 @@
-from utils.logger import AppLogger
+from src.utils.logger import AppLogger
 logger = AppLogger('my_app')
 
 from src.api.database import BaseDB
@@ -12,6 +12,7 @@ class DB_Students(BaseDB):
             )
             self.dBConn.commit()
             return self.dbCursor.lastrowid 
+
         except Exception as e:
             logger.error(f"Error al agregar estudiante: {e}")
             self.dBConn.rollback()
@@ -21,6 +22,7 @@ class DB_Students(BaseDB):
         try:
             self.dbCursor.execute("SELECT * FROM students WHERE id = %s", (student_id,))
             return self.dbCursor.fetchone()
+
         except Exception as e:
             logger.error(f"Error al obtener estudiante: {e}")
             raise
@@ -32,6 +34,7 @@ class DB_Students(BaseDB):
                 (student_data['name'], student_data['email'], student_id)
             )
             self.dBConn.commit()
+
         except Exception as e:
             logger.error(f"Error al actualizar estudiante: {e}")
             self.dBConn.rollback()
@@ -54,6 +57,7 @@ class DB_Students(BaseDB):
         try:
             self.dbCursor.execute("SELECT * FROM students")
             return self.dbCursor.fetchall()
+
         except Exception as e:
             logger.error(f"Error al listar estudiantes: {e}")
             raise

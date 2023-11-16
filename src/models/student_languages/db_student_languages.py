@@ -1,4 +1,4 @@
-from utils.logger import AppLogger
+from src.utils.logger import AppLogger
 logger = AppLogger('my_app')
 
 from src.api.database import BaseDB

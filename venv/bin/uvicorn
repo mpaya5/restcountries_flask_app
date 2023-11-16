@@ -1,4 +1,4 @@
-#!/home/miguelpaya/Dropbox/AireNetwork/pruebatécnica/venv/bin/python3
+#!/home/miguelpaya/Dropbox/AireNetwork/prueba_tecnica/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys

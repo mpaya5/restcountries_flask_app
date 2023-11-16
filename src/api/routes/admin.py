@@ -1,4 +1,6 @@
 from fastapi import HTTPException, APIRouter, Depends
+from typing import List
+from pydantic import Field
 import jwt
 import os
 from datetime import datetime, timedelta
@@ -44,7 +46,9 @@ async def generate_admin_token(
     return {"token": token}
 
 
-# Rutas para estudiantes
+"""
+Rutas del admin para manejar los estudiantes
+"""
 @router.post("/students/", response_model=StudentCreate)
 async def add_student(
     student: StudentModel,
@@ -74,7 +78,7 @@ async def add_student(
 
 @router.put("/students/{student_id}", response_model=StudentModel)
 async def update_student(
-    student_id: StudentID, 
+    student_id: int, 
     student: StudentModel,
     _: bool = Depends(verfiy_headers_admin)
 ):
@@ -86,7 +90,7 @@ async def update_student(
 
 @router.delete("/students/{student_id}", status_code=200, response_model=StudentDelete)
 async def delete_student(
-    student_id: StudentID,
+    student_id: int,
     _: bool = Depends(verfiy_headers_admin)
 ):
     with DB_Students() as db:
@@ -95,8 +99,19 @@ async def delete_student(
     return {"student_id": student_id, "message": result}
 
 
+@router.get("/students/", response_model=List[StudentModel])
+async def get_all_students(
+    _: bool = Depends(verfiy_headers_admin)
+):
+    with DB_Students() as db:
+        students = db.list_all()
 
-# Rutas para idiomas
+    return students
+
+
+"""
+Rutas del admin para manejar los idiomas
+"""
 @router.post("/languages/", response_model=LanguageCreateAndUpdate)
 async def add_language(
     language: LanguageModel,
@@ -110,7 +125,7 @@ async def add_language(
 
 @router.put("/languages/{language_id}", response_model=LanguageCreateAndUpdate)
 async def update_language(
-    language_id: LanguageID, 
+    language_id: int, 
     language: LanguageModel,
     _: bool = Depends(verfiy_headers_admin)
 ):
@@ -122,10 +137,20 @@ async def update_language(
 
 @router.delete("/languages/{language_id}", status_code=200, response_model=LanguageDelete)
 async def delete_language(
-    language_id: LanguageID,
+    language_id: int,
     _: bool = Depends(verfiy_headers_admin)
 ):
     with DB_Languages() as db:
         result = db.delete(language_id)
     
     return {"language_id": language_id, "message": result}
+
+
+@router.get("/languages/", response_model=List[LanguageModel])
+async def get_all_languages(
+    _: bool = Depends(verfiy_headers_admin)
+):
+    with DB_Languages() as db:
+        languages = db.list_all()
+
+    return languages
