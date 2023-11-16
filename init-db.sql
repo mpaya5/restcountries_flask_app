@@ -2,8 +2,7 @@
 CREATE TABLE IF NOT EXISTS students (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  signature_key VARCHAR(255) NOT NULL
+  email VARCHAR(255) NOT NULL
 );
 
 -- Crear tabla de idiomas (languages)

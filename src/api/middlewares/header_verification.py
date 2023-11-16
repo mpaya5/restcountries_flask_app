@@ -5,9 +5,6 @@ from cryptography.hazmat.primitives import serialization
 from dotenv import load_dotenv
 load_dotenv()
 
-PASSPHRASE_1 = os.getenv('PASSPHRASE_1')
-PASSPHRASE_2 = os.getenv('PASSPHRASE_2')
-
 async def verify_headers_students(
         Authorization: str = Header(
             ...,
