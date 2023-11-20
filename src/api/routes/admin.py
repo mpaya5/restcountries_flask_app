@@ -7,11 +7,17 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 from src.models.admin.admin import (AdminTokenResponse, GenerateAdminToken)
-from src.models.students.students import (StudentModel, StudentID, StudentCreate, StudentDelete)
-from src.models.languages.languages import (LanguageModel, LanguageID, LanguageDelete, LanguageCreateAndUpdate)
+from src.models.students.students import (StudentModel, GetStudentModel, StudentID, StudentCreate, StudentDelete)
+from src.models.languages.languages import (GetLanguageModel, LanguageModel, LanguageID, LanguageDelete, LanguageCreateAndUpdate)
+from src.models.student_languages.student_languages import (StudentLanguageID, StudentLanguages)
+
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import serialization
 
 from src.models.students.db_students import DB_Students
 from src.models.languages.db_languages import DB_Languages
+from src.models.student_languages.db_student_languages import DB_StudentLanguages
 
 from src.api.middlewares.header_verification import verfiy_headers_admin
 
@@ -20,17 +26,21 @@ router = APIRouter()
 load_dotenv()
 ADMIN_PASS = os.getenv('ADMIN_PASS')
 
+from src.utils.logger import AppLogger
+logger = AppLogger('my_app')
+
 # Ruta para generar un token JWT para el admin
 @router.post("/token", response_model = AdminTokenResponse)
 async def generate_admin_token(
-    password: GenerateAdminToken
+    data: GenerateAdminToken
 ):
-    if password != ADMIN_PASS:
+
+    if data.password != ADMIN_PASS:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     # Información que se incluirá en el token
     token_data = {
-        "admin": True,
+        "admin_pass": data.password,
         "exp": datetime.utcnow() + timedelta(hours=1)  # Token válido por 1 hora
     }
 
@@ -38,8 +48,14 @@ async def generate_admin_token(
     dir_path = os.path.dirname(os.path.realpath(__file__))
     private_key_path = os.path.join(dir_path, "..", "..", "..", "certs", "private.pem")
     
-    with open(private_key_path, 'r') as key_file:
-        private_key = serialization.load_pem_private_key(key_file.read())
+    with open(private_key_path, 'rb') as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend()
+            )
+
+    logger.info(f"{token_data}, {private_key}")
 
     token = jwt.encode(token_data, private_key, algorithm="RS256")
 
@@ -67,13 +83,22 @@ async def add_student(
     dir_path = os.path.dirname(os.path.realpath(__file__))
     private_key_path = os.path.join(dir_path, "..", "..", "..", "certs", "private.pem")
     
-    with open(private_key_path, 'r') as key_file:
-        private_key = serialization.load_pem_private_key(key_file.read())
+    with open(private_key_path, 'rb') as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=None,
+            backend=default_backend()
+            )
     
     # Añadimos el token al student
-    student.token = jwt.encode(token_data, private_key, algorithm="RS256")
+    token = jwt.encode(token_data, private_key, algorithm="RS256")
         
-    return student
+    return {
+        "name":student.name,
+        "email":student.email,
+        "token":token,
+        "id":student_id
+    }
 
 
 @router.put("/students/{student_id}", response_model=StudentModel)
@@ -99,7 +124,7 @@ async def delete_student(
     return {"student_id": student_id, "message": result}
 
 
-@router.get("/students/", response_model=List[StudentModel])
+@router.get("/students/", response_model=List[GetStudentModel])
 async def get_all_students(
     _: bool = Depends(verfiy_headers_admin)
 ):
@@ -118,7 +143,7 @@ async def add_language(
     _: bool = Depends(verfiy_headers_admin)
 ):
     with DB_Languages() as db:
-        language_id = db.add(language.dict())
+        language_id = db.add(language.name)
 
     return {"language_id": language_id, "name":language.name}
 
@@ -146,7 +171,7 @@ async def delete_language(
     return {"language_id": language_id, "message": result}
 
 
-@router.get("/languages/", response_model=List[LanguageModel])
+@router.get("/languages/", response_model=List[GetLanguageModel])
 async def get_all_languages(
     _: bool = Depends(verfiy_headers_admin)
 ):
@@ -154,3 +179,46 @@ async def get_all_languages(
         languages = db.list_all()
 
     return languages
+
+
+
+@router.post("/students/subscribe", response_model=StudentLanguages)
+async def student_subscribe(
+    data: StudentLanguages,
+    _: bool = Depends(verfiy_headers_admin)
+):
+    with DB_StudentLanguages() as db:
+        db.add_student_to_language(data.student_id, data.language_id)
+
+    return data
+
+
+
+@router.post("/students/unsubscribe", response_model=StudentLanguages)
+async def student_unsubscribe(
+    data: StudentLanguages,
+    _: bool = Depends(verfiy_headers_admin)
+):
+    with DB_StudentLanguages() as db:
+        db.remove_student_from_language(data.student_id, data.language_id)
+
+    return data
+
+
+@router.get("/students/subscribes/{student_id}", response_model=List[StudentLanguageID])
+async def get_all_student_subscribes(
+    student_id: int,
+    _: bool = Depends(verfiy_headers_admin)
+):
+    with DB_StudentLanguages() as db:
+        return db.list_languages_by_student(student_id)
+
+
+
+@router.get("/languages/subscribes/{language_id}", response_model=List[StudentLanguageID])
+async def get_all_students_subscribed_to_language(
+    language_id: int,
+    _: bool = Depends(verfiy_headers_admin)
+):
+    with DB_StudentLanguages() as db:
+        return db.list_students_by_language(language_id)

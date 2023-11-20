@@ -15,8 +15,9 @@ class BaseDB(ABC):
 
     def setUpDatabase(self):
         self.dBConn = pymysql.connect(
-            host = "localhost",
+            host = "db",
             user = DB_USER,
+            port = 3306,
             password = DB_PASSWORD,
             database = DB_DATABASE
         )

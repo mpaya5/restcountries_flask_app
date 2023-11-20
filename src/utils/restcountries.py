@@ -30,10 +30,8 @@ class RestCountriesAPI:
             country['percentage'] = f"{round((country['population'] / total_population) * 100, 4)}%"
 
         return countries
-        
 
 
-        
 
 
     

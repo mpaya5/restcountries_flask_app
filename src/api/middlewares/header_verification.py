@@ -1,6 +1,7 @@
 from fastapi import Header, HTTPException, Depends
 import jwt, os
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.backends import default_backend
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -29,8 +30,11 @@ async def verify_headers_students(
     dir_path = os.path.dirname(os.path.realpath(__file__))
     public_key_path = os.path.join(dir_path, "..", "..", "..", "certs", "public.pem")
     
-    with open(public_key_path, 'r') as key_file:
-        public_key = serialization.load_pem_public_key(key_file.read())
+    with open(public_key_path, 'rb') as key_file:
+        public_key = serialization.load_pem_public_key(
+            key_file.read(),
+            backend = default_backend()
+            )
 
     try:
         token_decoded = jwt.decode(token, public_key, algorithms=['RS256'])
@@ -70,8 +74,11 @@ async def verfiy_headers_admin(
     dir_path = os.path.dirname(os.path.realpath(__file__))
     public_key_path = os.path.join(dir_path, "..", "..", "..", "certs", "public.pem")
     
-    with open(public_key_path, 'r') as key_file:
-        public_key = serialization.load_pem_public_key(key_file.read())
+    with open(public_key_path, 'rb') as key_file:
+        public_key = serialization.load_pem_public_key(
+            key_file.read(),
+            backend = default_backend()
+            )
 
     try:
         token_decoded = jwt.decode(token, public_key, algorithms=['RS256'])

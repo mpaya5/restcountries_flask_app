@@ -1,3 +1,7 @@
+-- Crear la base de datos si no existe
+CREATE DATABASE IF NOT EXISTS aire_rest;
+USE aire_rest;
+
 -- Crear tabla de alumnos (students)
 CREATE TABLE IF NOT EXISTS students (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -19,3 +23,5 @@ CREATE TABLE IF NOT EXISTS student_languages (
   FOREIGN KEY (student_id) REFERENCES students(id),
   FOREIGN KEY (language_id) REFERENCES languages(id)
 );
+
+

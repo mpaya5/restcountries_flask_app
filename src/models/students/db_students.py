@@ -6,15 +6,21 @@ from src.api.database import BaseDB
 class DB_Students(BaseDB):
     def add(self, student_data):
         try:
+            self.dbCursor.execute("SELECT * FROM students WHERE email = %s", (student_data['email'],))
+            existing_student = self.dbCursor.fetchone()
+            if existing_student:
+                logger.info("Email already registered")
+                return existing_student[0]
+
             self.dbCursor.execute(
-                "INSERT INTO students (name, email, signature_key) VALUES (%s, %s, %s)",
-                (student_data['name'], student_data['email'], student_data['signature_key'])
+                "INSERT INTO students (name, email) VALUES (%s, %s)",
+                (student_data['name'], student_data['email'])
             )
             self.dBConn.commit()
             return self.dbCursor.lastrowid 
 
         except Exception as e:
-            logger.error(f"Error al agregar estudiante: {e}")
+            logger.error(f"Error trying to add student: {e}")
             self.dBConn.rollback()
             raise
 
@@ -24,7 +30,7 @@ class DB_Students(BaseDB):
             return self.dbCursor.fetchone()
 
         except Exception as e:
-            logger.error(f"Error al obtener estudiante: {e}")
+            logger.error(f"Error listing the student: {e}")
             raise
 
     def update(self, student_id, student_data):
@@ -36,7 +42,7 @@ class DB_Students(BaseDB):
             self.dBConn.commit()
 
         except Exception as e:
-            logger.error(f"Error al actualizar estudiante: {e}")
+            logger.error(f"Error updating the student: {e}")
             self.dBConn.rollback()
             raise
 
@@ -45,10 +51,10 @@ class DB_Students(BaseDB):
             self.dbCursor.execute("DELETE FROM students WHERE id = %s", (student_id,))
             self.dBConn.commit()
 
-            return "Student eliminado correctamente"
+            return "Student deleted correctly"
 
         except Exception as e:
-            message = f"Error al eliminar estudiante: {e}"
+            message = f"Error deleting student: {e}"
             logger.error(message)
             self.dBConn.rollback()
             return message
@@ -56,8 +62,12 @@ class DB_Students(BaseDB):
     def list_all(self):
         try:
             self.dbCursor.execute("SELECT * FROM students")
-            return self.dbCursor.fetchall()
+            results = self.dbCursor.fetchall()
+
+            students = [{"id": student[0], "name": student[1], "email": student[2]} for student in results]
+        
+            return students
 
         except Exception as e:
-            logger.error(f"Error al listar estudiantes: {e}")
+            logger.error(f"Error listing all students: {e}")
             raise

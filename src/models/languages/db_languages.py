@@ -6,6 +6,12 @@ from src.api.database import BaseDB
 class DB_Languages(BaseDB):
     def add(self, language_name):
         try:
+            self.dbCursor.execute("SELECT * FROM languages WHERE name = %s", (language_name,))
+            existing_language = self.dbCursor.fetchone()
+            if existing_language:
+                logger.info("Language already registered")
+                return existing_language[0]
+
             self.dbCursor.execute(
                 "INSERT INTO languages (name) VALUES (%s)",
                 (language_name,)
@@ -14,7 +20,7 @@ class DB_Languages(BaseDB):
             return self.dbCursor.lastrowid
 
         except Exception as e:
-            logger.error(f"Error al añadir idioma: {e}")
+            logger.error(f"Error adding language: {e}")
             self.dBConn.rollback()
             raise
 
@@ -24,7 +30,7 @@ class DB_Languages(BaseDB):
             return self.dbCursor.fetchone()
 
         except Exception as e:
-            logger.error(f"Error al obtener idioma: {e}")
+            logger.error(f"Error getting a language: {e}")
             raise
 
     def update(self, language_id, new_name):
@@ -36,7 +42,7 @@ class DB_Languages(BaseDB):
             self.dBConn.commit()
 
         except Exception as e:
-            logger.error(f"Error al actualizar idioma: {e}")
+            logger.error(f"Error updating a language: {e}")
             self.dBConn.rollback()
             raise
 
@@ -45,10 +51,10 @@ class DB_Languages(BaseDB):
             self.dbCursor.execute("DELETE FROM languages WHERE id = %s", (language_id,))
             self.dBConn.commit()
 
-            return "Añadido language correctamente"
+            return "Added language correctly"
 
         except Exception as e:
-            message = f"Error al eliminar idioma: {e}"
+            message = f"Error deleting the language: {e}"
             logger.error(message)
             self.dBConn.rollback()
             return message
@@ -56,8 +62,12 @@ class DB_Languages(BaseDB):
     def list_all(self):
         try:
             self.dbCursor.execute("SELECT * FROM languages")
-            return self.dbCursor.fetchall()
+            results = self.dbCursor.fetchall()
+
+            languages = [{"id": language[0], "name": language[1]} for language in results]
+        
+            return languages
 
         except Exception as e:
-            logger.error(f"Error al listar idiomas: {e}")
+            logger.error(f"Error listing all language: {e}")
             raise

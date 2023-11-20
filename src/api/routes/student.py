@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from src.models.students.db_students import DB_Students
 from src.models.student_languages.db_student_languages import DB_StudentLanguages
 
-from src.models.languages.languages import PercentageCountry, LanguageModel
+from src.models.languages.languages import PercentageCountry, LanguageModel, LanguagePercentage
 
 from src.api.middlewares.header_verification import verify_headers_students
 
@@ -18,7 +18,7 @@ router = APIRouter()
 
 @router.get('/percentages/{language}', response_model=List[PercentageCountry])
 async def get_percentages(
-    language: int,
+    language: str,
     _:bool = Depends(verify_headers_students)
 ):
     api_restcountries = RestCountriesAPI()
