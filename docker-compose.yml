@@ -78,6 +78,6 @@ networks:
 
 volumes:
   db-data:
-  test_data:
+  ls_data:
   ls_data:
   kb_data:
