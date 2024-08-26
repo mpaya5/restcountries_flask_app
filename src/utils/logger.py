@@ -3,6 +3,9 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 
 class AppLogger:
+    """
+    A singletone class for application logging.
+    """
     _instance = None
 
     def __new__(cls, *args, **kwargs):
@@ -50,3 +53,6 @@ class AppLogger:
 
     def critical(self, message):
         self.logger.critical(message)
+
+
+logger = AppLogger('api-restcountries')
